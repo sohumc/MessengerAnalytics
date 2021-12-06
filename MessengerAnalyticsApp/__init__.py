@@ -30,9 +30,6 @@ def create_app(test_config=None):
     from . import db_populate
     db_populate.init_app(app)
 
-    from . import auth
-    app.register_blueprint(auth.bp)
-
     from . import api
     app.register_blueprint(api.bp)
     

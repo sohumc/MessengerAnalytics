@@ -10,11 +10,57 @@ import pandas as pd
 import json
 from MessengerAnalyticsApp.db_populate import decode_str
 from collections import Counter
-
+from dateutil import parser
 from MessengerAnalyticsApp.testing_helper import test_function
 from MessengerAnalyticsApp.db import get_db
+import datetime
+import re
+import time
 
 bp = Blueprint('api', __name__, url_prefix='/api')
+
+
+def get_conversation_starters(conversation_id):
+    WAIT_HOURS_INTERVAL_BETWEEN_MESSAGES = 4
+    SECONDS_IN_HOUR = 3600
+    db = get_db()
+    df = pd.read_sql_query("""SELECT datetime(messages.timestamp) as d, messages.sender FROM messages WHERE conversation_id='{}' ORDER BY d ASC""".format(conversation_id), db)
+    conversation_starters = {}
+    date_format = "%Y-%m-%d %H:%M:%S"
+    for i in range(1,len(df)):
+        hour_duration_between_messages = (datetime.datetime.strptime(df['d'][i], date_format) - datetime.datetime.strptime(df['d'][i-1], date_format)).total_seconds()/SECONDS_IN_HOUR
+
+        if hour_duration_between_messages > WAIT_HOURS_INTERVAL_BETWEEN_MESSAGES:
+            if (df['sender'][i] in conversation_starters):
+                conversation_starters[df['sender'][i]] +=1
+            else:
+                conversation_starters[df['sender'][i]] =1
+    return(conversation_starters)
+
+
+def get_mentioned_stats(conversation_id):
+    MENTIONED_REGEX_PATTERN = "\B@\w+"
+    mentioned_counts = {}
+    db = get_db()
+    participants = pd.read_sql_query("""SELECT participants as p FROM conversations WHERE id='{}'""".format(conversation_id), db)['p'][0].strip('[]').replace("'","").split(', ')
+    participants_first_names = [x.split(" ")[0] for x in participants]
+    messages = pd.read_sql_query("""SELECT content FROM messages WHERE conversation_id='{}' AND content IS NOT NULL""".format(conversation_id), db)['content']
+    for message in messages:
+        matches = re.findall(MENTIONED_REGEX_PATTERN, message)
+        for match in matches:
+            cleaned_match = match.replace("@","")
+            if cleaned_match in participants_first_names:
+                if cleaned_match in mentioned_counts:
+                    mentioned_counts[cleaned_match] +=1
+                else:
+                    mentioned_counts[cleaned_match] = 1
+    return(mentioned_counts)
+
+@bp.route('/conversationStats/<conversation_id>', methods=('GET',))
+def get_conversation_stats(conversation_id):
+    # get_conversation_starters(conversation_id)
+    get_mentioned_stats(conversation_id)
+    return "inside conversation stats"
 
 def get_average_reactions_per_message_per_participant(conversation_id, message_data):
     db = get_db()
@@ -53,28 +99,20 @@ def get_most_reacted_messages_per_participant(message_data):
         summed_reactions = {}
         for reaction in reactions.keys():
             summed_reactions[reaction] = len(reactions[reaction])          
-    
+        newReactionCount = {
+            "reaction_count" : reaction_count,
+            "message" : content,
+            "reactions" : summed_reactions
+            }
         if sender in reaction_counts:
             if reaction_count > reaction_counts[sender]:
                 reaction_counts[sender] = reaction_count
-                top_reacted_messages[sender] = [{
-                    "reaction_count" : reaction_count,
-                    "message" : content,
-                    "reactions" : summed_reactions
-                }]
+                top_reacted_messages[sender] = [newReactionCount]
             elif reaction_count == reaction_counts[sender]:
-                top_reacted_messages[sender].append({
-                    "reaction_count" : reaction_count,
-                    "message" : content,
-                    "reactions" : summed_reactions
-                })
+                top_reacted_messages[sender].append(newReactionCount)
         else:
             reaction_counts[sender] = reaction_count
-            top_reacted_messages[sender] = [{                    
-                "reaction_count" : reaction_count,
-                "message" : content,
-                "reactions" : summed_reactions
-                }]
+            top_reacted_messages[sender] = [newReactionCount]
     print(json.dumps(top_reacted_messages))
     return top_reacted_messages
 
@@ -99,8 +137,8 @@ def get_reaction_data(conversation_id):
     messages = db.execute("SELECT sender, content, reactions FROM messages WHERE conversation_id=? AND messages.reactions IS NOT NULL", (conversation_id,)).fetchall()
     reactions = [x[2] for x in messages]
     # get_total_reaction_counts(reactions)
-    # get_most_reacted_messages_per_participant(messages)
-    print(get_average_reactions_per_message_per_participant(conversation_id, messages))
+    get_most_reacted_messages_per_participant(messages)
+    # print(get_average_reactions_per_message_per_participant(conversation_id, messages))
     return "done"
     
 
