@@ -57,6 +57,26 @@ def remove_nonjson_objects(jsonFileList):
             combined_path = parentDir + "/" + filename
             if (combined_path) not in jsonFileList:
                 os.remove(combined_path)
+def parse_reactions(input_reactions):
+    # turn "reactions": [
+    #     {
+    #       "reaction": "\u00e2\u009d\u00a4",
+    #       "actor": "Sohum Chitalia"
+    #     },
+    #     {
+    #       "reaction": "\u00e2\u009d\u00a4",
+    #       "actor": "Sohum Chitalia"
+    #     }
+    #   ]
+    # into -> reactions = {reaction: [actors]}
+    parsed_reactions = {}
+    for reactionObject in input_reactions:
+        if decode_str(reactionObject["reaction"]) in parsed_reactions:
+            if reactionObject["actor"] not in parsed_reactions[decode_str(reactionObject["reaction"])]:
+                parsed_reactions[decode_str(reactionObject["reaction"])].append(reactionObject["actor"])
+        else:
+            parsed_reactions[decode_str(reactionObject["reaction"])] = [reactionObject["actor"]]
+    return parsed_reactions
 
 def parse_messages(messageFile):
     messages = []
@@ -65,11 +85,12 @@ def parse_messages(messageFile):
             sender = message['sender_name'],
             content = decode_str(message.get("content", None)),
             timestamp = datetime.fromtimestamp(message["timestamp_ms"] / 1000.0).isoformat(),
-            gifs = ', '.join([x["uri"] for x in message["gifs"]]) if "gifs" in message else None,
-            photos = ', '.join([x["uri"] for x in message["photos"]]) if "photos" in message else None,
+            gifs = str(', '.join([x["uri"] for x in message["gifs"]])) if "gifs" in message else None,
+            photos = str(', '.join([x["uri"] for x in message["photos"]])) if "photos" in message else None,
             share = message["share"].get("link", None) if "share" in message else None,
             audio = message["audio_files"][0].get("uri", None) if "audio_files" in message else None,
             video = ', '.join([x["uri"] for x in message["videos"]]) if "videos" in message else None,
+            reactions = json.dumps(parse_reactions(message["reactions"])) if "reactions" in message else None
         )
         messages.append(newMessage)
     return messages
@@ -102,10 +123,10 @@ def load_conversations_to_db(conversationsList):
         error = "Conversation is already registered."
 
     for conversation in conversationsList:
-        dbmessageList = [(conversation.id, e.sender, e.timestamp, e.content, str(e.gifs), str(e.photos), e.share, e.audio, e.video) for e in conversation.messages]
+        dbmessageList = [(conversation.id, e.sender, e.timestamp, e.content, e.gifs, e.photos, e.share, e.audio, e.video, e.reactions) for e in conversation.messages]
         try:
             db.executemany(
-                    "INSERT INTO messages (conversation_id, sender, timestamp, content, gifs, photos, share, audio, video) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO messages (conversation_id, sender, timestamp, content, gifs, photos, share, audio, video, reactions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     dbmessageList
                 )
             db.commit()

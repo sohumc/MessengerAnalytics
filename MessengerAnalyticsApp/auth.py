@@ -78,6 +78,10 @@ def load_logged_in_user():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+    
+@bp.route('/hello')
+def testhello():
+    return "hi"
 
 def login_required(view):
     @functools.wraps(view)

@@ -18,5 +18,6 @@ CREATE TABLE messages (
   share TEXT,
   audio TEXT,
   video TEXT,
+  reactions TEXT,
   FOREIGN KEY (conversation_id) REFERENCES conversations (id)
 );

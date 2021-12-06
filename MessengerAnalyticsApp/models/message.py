@@ -17,4 +17,5 @@ class Message:
     share: str = ""
     audio: str = ""
     video: str = ""
+    reactions: dict = field(default_factory=dict)
 
