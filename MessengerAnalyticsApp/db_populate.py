@@ -104,7 +104,7 @@ def create_conversations(jsonFileDict):
             messageFile = json.load(open(messageFilePath))
             participants = [list(e.values())[0] for e in messageFile['participants']]
             if len(newConversation.participants) == 0: newConversation.participants = participants
-            if newConversation.title == "": newConversation.title = messageFile['title']
+            if newConversation.title == "": newConversation.title = decode_str(messageFile['title'])
             newConversation.messages.extend(parse_messages(messageFile))
         conversations.append(newConversation)
     return conversations
@@ -137,11 +137,10 @@ def load_conversations_to_db(conversationsList):
 @with_appcontext
 def load_db_command():
     jsonFileDict = find_json_messages()
-
     # remove_nonjson_objects(jsonFileDict.values())
     # random_entry = random.choice(list(jsonFileDict.items()))
     # jsonFileDict = {random_entry[0]: random_entry[1]}
-    jsonFileDict = {'MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da': jsonFileDict['MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da']}
+    # jsonFileDict = {'MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da': jsonFileDict['MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da']}
     conversations = create_conversations(jsonFileDict)
     load_conversations_to_db(conversations)
 

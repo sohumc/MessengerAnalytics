@@ -19,6 +19,22 @@ import time
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
+@bp.route('/conversationList', methods=('GET',))
+def get_conversation_list():
+    db = get_db()
+    df = pd.read_sql_query("""SELECT conversations.id, conversations.title, count(messages.id) as num_messages, max(messages.timestamp) as last_message_date FROM conversations JOIN messages on messages.conversation_id = conversations.id GROUP BY conversation_id""", db)
+    conversation_list = []
+    for index, row in df.iterrows():
+        conversation_object = {
+            "id" : row["id"],
+            "title" : row["title"],
+            "num_messages" : row["num_messages"],
+            "last_message_date" : row["last_message_date"]
+        }
+        conversation_list.append(conversation_object)
+
+    return {"result" : conversation_list}
+
 
 def get_conversation_starters(conversation_id):
     WAIT_HOURS_INTERVAL_BETWEEN_MESSAGES = 4
@@ -145,7 +161,7 @@ def get_reaction_data(conversation_id):
 def get_messages_per_month(conversation_id):
     db = get_db()
     try:
-        df = pd.read_sql_query("""SELECT strftime('%m-%Y',messages.timestamp) AS m, COUNT(*) FROM messages WHERE conversation_id='{}' GROUP BY m;""".format(conversation_id), db)
+        df = pd.read_sql_query("""SELECT strftime('%m-%Y',messages.timestamp) AS m, COUNT(*) FROM messages WHERE conversation_id='{}' GROUP BY m ORDER BY messages.timestamp ASC;""".format(conversation_id), db)
         return df
 
     except Exception as e:
@@ -171,45 +187,42 @@ def get_messages_per_hour(conversation_id):
 
 @bp.route('/messagesTimeSeries/<conversation_id>', methods=('GET',))
 def get_message_time_data(conversation_id):
-    return {
+    return_obj = {
         "messages_per_month": get_messages_per_month(conversation_id).to_dict(),
         "daily_messages_by_sender" : get_daily_messages_by_sender(conversation_id).to_dict(),
         "messages_per_hour" : get_messages_per_hour(conversation_id).to_dict()
     }
+    return return_obj
 
 
 @bp.route('/messageWordData/<conversation_id>', methods=('GET',))
 def get_message_word_data(conversation_id):
     db = get_db()
     tokenizer = nltk.RegexpTokenizer(r"\w+")
-    try:
-        messages = db.execute("SELECT content FROM messages WHERE messages.conversation_id = ? AND messages.content IS NOT NULL AND messages.share IS NULL", (conversation_id,)).fetchall()
-        messages = [x[0] for x in messages]
-        word_count = 0
-        longest_word_length = 0
-        longest_words = []
-        for message in messages:
-            words = tokenizer.tokenize(message)
-            word_count += len(words)
-            for word in words:
-                if(len(word) > longest_word_length):
-                    longest_word_length = len(word)
-                    longest_words = [word]
-                elif (len(word) == longest_word_length):
-                    longest_words.append(word)
-                else:
-                    continue
-        
-        return str({
-            "non-media messages": len(messages),
-            "total words" : word_count,
-            "words per message" : word_count/len(messages),
-            "longest words" : str(longest_words)
-        })
+    messages = db.execute("SELECT content FROM messages WHERE messages.conversation_id = ? AND messages.content IS NOT NULL AND messages.share IS NULL", (conversation_id,)).fetchall()
+    messages = [x[0] for x in messages]
+    word_count = 0
+    longest_word_length = 0
+    longest_words = []
+    for message in messages:
+        words = tokenizer.tokenize(message)
+        word_count += len(words)
+        for word in words:
+            if(len(word) > longest_word_length):
+                longest_word_length = len(word)
+                longest_words = [word]
+            elif (len(word) == longest_word_length):
+                longest_words.append(word)
+            else:
+                continue
+    
+    return {
+        "non-media messages": len(messages),
+        "total words" : word_count,
+        "words per message" : word_count/len(messages),
+        "longest words" : longest_words
+    }
 
-    except Exception as e:
-        print(e)    
-    return "here:"
 
 
 @bp.route('/languageSentimentData/<conversation_id>', methods=('GET',))
@@ -218,21 +231,17 @@ def get_language_sentiment_data(conversation_id):
     sentiment_dict = {}
     sia = SentimentIntensityAnalyzer()
 
-    try:
-        messages = db.execute("SELECT content, sender FROM messages WHERE messages.conversation_id = ? AND messages.content IS NOT NULL AND messages.share IS NULL AND length(messages.content) > 20", (conversation_id,)).fetchall()
-        for row in messages:
-            if row[1] in sentiment_dict:
-                sentiment_dict[row[1]].append(sia.polarity_scores(row[0])['compound'])
-            else:
-                sentiment_dict[row[1]] = [sia.polarity_scores(row[0])['compound']]
-        
-        for key,value in sentiment_dict.items():
-            sentiment_dict[key] = sum(sentiment_dict[key])/len(sentiment_dict[key])
-        return str(sentiment_dict)
+    messages = db.execute("SELECT content, sender FROM messages WHERE messages.conversation_id = ? AND messages.content IS NOT NULL AND messages.share IS NULL AND length(messages.content) > 20", (conversation_id,)).fetchall()
+    for row in messages:
+        if row[1] in sentiment_dict:
+            sentiment_dict[row[1]].append(sia.polarity_scores(row[0])['compound'])
+        else:
+            sentiment_dict[row[1]] = [sia.polarity_scores(row[0])['compound']]
+    
+    for key,value in sentiment_dict.items():
+        sentiment_dict[key] = sum(sentiment_dict[key])/len(sentiment_dict[key])
+    return sentiment_dict
 
-    except Exception as e:
-        print(e)    
-    return "here:"
 
 
 @bp.route('/contentType/<conversation_id>', methods=('GET', 'POST'))
@@ -247,7 +256,7 @@ def get_content_types(conversation_id):
             'audio': content_type_counts[0][3],
             'video': content_type_counts[0][4],
         }
-        return str(content_type_dict)
+        return content_type_dict
 
     except Exception as e:
         print(e)    

@@ -13,7 +13,8 @@ SELECT
     COUNT(*)
 FROM messages
 WHERE conversation_id='theforgereturns_7kjmx7d_da'
-GROUP BY m;
+GROUP BY m
+ORDER BY messages.timestamp ASC
 
 --messages by hour
 SELECT 
@@ -28,7 +29,7 @@ SELECT
     sender, content, reactions
 FROM messages
 WHERE conversation_id='theforgereturns_7kjmx7d_da'
-AND messages.reactions IS NOT NULL
+AND messages.reactions IS NOT NULL;
 
 
 --messages with reactions
@@ -37,4 +38,12 @@ SELECT
     COUNT(*)
 FROM messages
 WHERE conversation_id='theforgereturns_7kjmx7d_da'
-GROUP BY sender
+GROUP BY sender;
+
+select * FROM conversations;
+
+
+select conversations.id, conversations.title, count(messages.id) as num_messages, max(messages.timestamp) as last_message_date
+from conversations
+JOIN messages on messages.conversation_id = conversations.id
+group by conversation_id
