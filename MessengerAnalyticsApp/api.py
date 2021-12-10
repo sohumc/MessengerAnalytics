@@ -11,7 +11,6 @@ import json
 from MessengerAnalyticsApp.db_populate import decode_str
 from collections import Counter
 from dateutil import parser
-from MessengerAnalyticsApp.testing_helper import test_function
 from MessengerAnalyticsApp.db import get_db
 import datetime
 import re
