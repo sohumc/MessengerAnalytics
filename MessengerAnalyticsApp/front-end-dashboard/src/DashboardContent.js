@@ -21,6 +21,11 @@ import MessageWordsData from './Components/MessageWordsData';
 import MonthlyMessageChart from './Components/MonthlyMessageChart';
 import HourlyMessageChart from './Components/HourlyMessageChart'
 import DailyMessageChart from './Components/DailyMessageChart';
+import ReactionCounts from './Components/ReactionCounts';
+import TopReactedMessages from './Components/TopReactedMessages'
+import AvgReactionsByParticipant from './Components/AvgReactionsByParticipant';
+import MostMentioned from './Components/MostMentioned';
+import ConversationStarters from './Components/ConversationStarters';
 import { mainListItems, secondaryListItems } from './listItems';
 import Title from './Title';
 
@@ -29,121 +34,185 @@ import Title from './Title';
 
 export default function DashboardContent() {
   const location = useLocation();
+  const [count, setCount] = useState(0);
+  const [conversationInfo, setConversationInfo] = useState([]);
+  
 
-    return (
-      <React.Fragment>
-        <Typography variant="body2" sx={{ pb: 2 }} color="text.secondary">
-          Current route: {location.pathname}
-        </Typography>
-          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Grid container spacing={3}>
-              {/* ConversationInfo */}
-              
-              <Grid item wrap = "nowrap" xs={12} md={4} lg={3}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: 240,
-                  }}
-                >
+  useEffect(() => {
+    fetch('/api/conversationList').then(res => res.json()).then(
+      data => {
+        setConversationInfo(data["result"])
+        
+    });
+  }, []);
+  let conversation_id = useLocation()['pathname'].replace("/conversation/","");
+  var result = conversationInfo.filter(obj => {
+    return obj.id === conversation_id
+  })
+  var titleStr = "Select Conversation to Begin"
+  if(result.length){
+    titleStr = result[0]["title"]
+  }
 
-                  <ConversationInfo />
-                </Paper>
-              </Grid>
-              
-              {/* Chart */}
-              <Grid item xs={12} md={8} lg={9}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: 240,
-                  }}
-                >
-                  <Chart />
-                </Paper>
-              </Grid>
-              {/* Content Shared Type */}
-              <Grid item xs={12} md={4} lg={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <ContentType />
-                </Paper>
-              </Grid>
-              {/* Conversation Sentiment */}
-              <Grid item xs={12} md={8} lg={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <ConversationSentiment />
-                </Paper>
-              </Grid>
-              {/* Message Word Data */}
-              <Grid item xs={12} md={8} lg={4}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <MessageWordsData />
-                </Paper>
-              </Grid>
-              {/* Monthly Message Chart */}
-              <Grid item xs={12} md={8} lg={6}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: 360,
-                  }}
-                >    
-                < MonthlyMessageChart/>                
-                </Paper>
-              </Grid>
-              {/* Hourly Message Chart */}
-              <Grid item xs={12} md={8} lg={6}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: 360,
-                  }}
-                >    
-                < HourlyMessageChart/>                
-                </Paper>
-              </Grid>
-              {/* Daily Message Chart */}
-              <Grid item xs={12} md={8} lg={12}>
-                <Paper
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: 360,
-                  }}
-                >    
-                < DailyMessageChart/>                
-                </Paper>
-              </Grid>
+  return (
+    <React.Fragment>
+     
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={12} lg={12}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Typography component="h2" variant="h4" color="primary" >
+                   {titleStr}
+                </Typography>
+              </Paper>
             </Grid>
-          </Container>
-    </React.Fragment>
+            {/* Monthly Message Chart */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 360,
+                }}
+              >    
+              < MonthlyMessageChart/>                
+              </Paper>
+            </Grid>
+            {/* Hourly Message Chart */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 360,
+                }}
+              >    
+              < HourlyMessageChart/>                
+              </Paper>
+            </Grid>
+            {/* Daily Message Chart */}
+            <Grid item xs={12} md={8} lg={12}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 360,
+                }}
+              >    
+              < DailyMessageChart/>                
+              </Paper>
+            </Grid>
+            {/* Top Reacted Messages */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <TopReactedMessages />
+              </Paper>
+            </Grid>
+            
+            {/* Reaction Counts */}
+            <Grid item xs={12} md={4} lg={2.5}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <ReactionCounts />
+              </Paper>
+            </Grid>
+            {/* Average Reactions Per Message */}
+            <Grid item xs={12} md={8} lg={3.5}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <AvgReactionsByParticipant />
+              </Paper>
+            </Grid>
+            {/* Mentioned Stats */}
+            <Grid item xs={12} md={8} lg={4}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <MostMentioned />
+              </Paper>
+            </Grid>
+            {/* Conversation Starter Stats */}
+            <Grid item xs={12} md={8} lg={4}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <ConversationStarters />
+              </Paper>
+            </Grid>
+            {/* Conversation Sentiment */}
+            <Grid item xs={12} md={8} lg={4}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <ConversationSentiment />
+              </Paper>
+            </Grid>
+            {/* Content Shared Type */}
+            <Grid item xs={12} md={4} lg={4}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <ContentType />
+              </Paper>
+            </Grid>
+            
+            {/* Message Word Data */}
+            <Grid item xs={12} md={8} lg={4}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <MessageWordsData />
+              </Paper>
+            </Grid>
+            
+          </Grid>
+        </Container>
+  </React.Fragment>
 
-      );
+    );
   }

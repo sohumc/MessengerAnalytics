@@ -74,10 +74,12 @@ def get_mentioned_stats(conversation_id):
 
 @bp.route('/conversationStats/<conversation_id>', methods=('GET',))
 def get_conversation_stats(conversation_id):
-    # get_conversation_starters(conversation_id)
-    get_mentioned_stats(conversation_id)
-    return "inside conversation stats"
-
+    return_obj = {
+        "conversation_starters": get_conversation_starters(conversation_id),
+        "mentioned_stats" : get_mentioned_stats(conversation_id),
+    }
+    return return_obj
+    
 def get_average_reactions_per_message_per_participant(conversation_id, message_data):
     db = get_db()
     message_counts = {}
@@ -129,7 +131,6 @@ def get_most_reacted_messages_per_participant(message_data):
         else:
             reaction_counts[sender] = reaction_count
             top_reacted_messages[sender] = [newReactionCount]
-    print(json.dumps(top_reacted_messages))
     return top_reacted_messages
 
 
@@ -144,18 +145,20 @@ def get_total_reaction_counts(reaction_data):
             else:
                 reaction_counts[reaction] = len(actors)
     counted_reactions = sorted(reaction_counts.items(), key=lambda x:-x[1])[:10]
-
-    print (counted_reactions)
+    return (counted_reactions)
     
 @bp.route('/reactions/<conversation_id>', methods=('GET',))
 def get_reaction_data(conversation_id):
     db = get_db()
     messages = db.execute("SELECT sender, content, reactions FROM messages WHERE conversation_id=? AND messages.reactions IS NOT NULL", (conversation_id,)).fetchall()
     reactions = [x[2] for x in messages]
-    # get_total_reaction_counts(reactions)
-    get_most_reacted_messages_per_participant(messages)
-    # print(get_average_reactions_per_message_per_participant(conversation_id, messages))
-    return "done"
+    return_obj = {
+        "total_reaction_counts": get_total_reaction_counts(reactions),
+        "most_reacted_messages_per_participant" : get_most_reacted_messages_per_participant(messages),
+        "average_reactions_per_message_per_participant" : get_average_reactions_per_message_per_participant(conversation_id, messages)
+    }
+    return return_obj
+    
     
 
 def get_messages_per_month(conversation_id):

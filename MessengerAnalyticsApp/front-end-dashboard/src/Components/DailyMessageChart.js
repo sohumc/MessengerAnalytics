@@ -30,6 +30,9 @@ import {ResponsiveBar} from '@nivo/bar'
 export default function DailyMessageChart() {
     const [dailyMessageChartData, setDailyMessageChartData] = useState([]);
     const [participants, setParticipants] = useState([]);
+    const [randomParticipants, setRandomParticipants] = useState([]);
+    const [firstRandomParticipant, setFirstRandomParticipant] = useState("");
+
 
     let conversation_id = useLocation()['pathname'].replace("/conversation/","");
     let arrayOfWeekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -67,9 +70,9 @@ export default function DailyMessageChart() {
                     final_array.push(temp_obj)
                   }
                 setParticipants(Array.from(temp_participants))
-
+                setRandomParticipants(Array.from(temp_participants).sort(() => .5 - Math.random()).slice(0, 2));
                 setDailyMessageChartData(final_array.reverse());
-            }
+            }   setFirstRandomParticipant("Sohum")
             });
             
         }, [conversation_id])
@@ -106,6 +109,20 @@ export default function DailyMessageChart() {
                         rotation: -45,
                         lineWidth: 6,
                         spacing: 10
+                    }
+                ]}
+                fill={[
+                    {
+                        match: {
+                            id: "{firstRandomParticipant}"
+                        },
+                        id: 'dots'
+                    },
+                    {
+                        match: {
+                            id: 'Sohum Chitalia'
+                        },
+                        id: 'lines'
                     }
                 ]}
                 

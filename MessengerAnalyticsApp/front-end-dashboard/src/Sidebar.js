@@ -58,10 +58,7 @@ function ListItemLink(props) {
   );
 }
 
-
-
 export default function Sidebar() {
-
     const [count, setCount] = useState(0);
     const [conversationList, setConversationList] = useState([]);
     const [selectedID, setSelectedID] = useState("");
@@ -92,18 +89,6 @@ export default function Sidebar() {
                 />
 
             ))}
-         {/* {conversationList.map(conversation => (
-                <ListItem 
-                button key = {conversation.id}
-                selected={selectedID === conversation.id}
-                onClick={(event) => handleListItemClick(event, conversation.id)}
-                >
-                  <RouterLink to = {"conversation/" + conversation.id}>
-                    {conversation.title}
-                  </RouterLink>
-
-                </ListItem>
-            ))} */}
             </List>
     </ React.Fragment>
   );
