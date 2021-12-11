@@ -1,18 +1,7 @@
 import * as React from 'react';
-import { useTheme } from '@mui/material/styles';
-import { LineChart, Line, XAxis, YAxis, Label, ResponsiveContainer } from 'recharts';
 import Title from '../Title';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
-import { useLocation, BrowserRouter, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import { prettifyNumber } from '../Utils';
-import { ResponsiveLine } from '@nivo/line'
 import { Box } from '@mui/system';
 import {ResponsiveBar} from '@nivo/bar'
 
@@ -59,7 +48,7 @@ export default function DailyMessageChart() {
                         }
                     }
 
-                for (var i = 0; i < Object.keys(temp_dict).length; i++) {
+                for (i = 0; i < Object.keys(temp_dict).length; i++) {
                     let dayParticipants = Object.values(temp_dict)[i];
                     Object.keys(dayParticipants).forEach(temp_participants.add, temp_participants)
                 }
@@ -77,10 +66,7 @@ export default function DailyMessageChart() {
             
         }, [conversation_id])
         
-        var data = [
-            
-          ]
-        const MyResponsiveBar = ({ data /* see data tab */ }) => (
+        const MyResponsiveBar = (
             <ResponsiveBar
                 data={dailyMessageChartData}
                 keys={participants}
@@ -180,7 +166,7 @@ export default function DailyMessageChart() {
       <Title>Daily Messages (by Participant)</Title>
 
     <Box sx={{height: '90%' }}>
-    {MyResponsiveBar({ data })}
+    {MyResponsiveBar}
     </Box>
 
 

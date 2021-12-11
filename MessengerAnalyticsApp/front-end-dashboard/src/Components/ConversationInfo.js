@@ -1,33 +1,58 @@
 import * as React from 'react';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
 import Title from '../Title';
-import { useLocation, BrowserRouter, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import { prettifyNumber } from '../Utils';
 
-function preventDefault(event) {
-  event.preventDefault();
-}
 
 export default function ConversationInfo() {
 
     // const { search } = useLocation();
     // let params = useParams();
-    let location = useLocation()['pathname'].replace("/conversation/","");
+    const [conversationInfo, setConversationInfo] = useState({});
+    let conversation_id = useLocation()['pathname'].replace("/conversation/","");
+    useEffect(() => {
 
+        fetch('/api/conversationBasicInfo/' + conversation_id).then(res => res.json()).then(
+        data => {
+            data["num_messages"] = prettifyNumber(data["num_messages"])
+            setConversationInfo(data)
+            });
+        }, [conversation_id]);
+    
   return (
     <React.Fragment>
-      <Title>Conversation Stats</Title>
-      <Typography component="p" variant="h4">
-        {location}
-      </Typography>
-      <Typography color="text.secondary" sx={{ flex: 1 }}>
-        on 15 March, 2019
-      </Typography>
-      <div>
-        <Link color="primary" href="#" onClick={preventDefault}>
-          View balance
-        </Link>
-      </div>
+      <Title>Conversation Info</Title>
+      <List >
+        <ListItem sx={{paddingTop: 0,paddingBottom: 0}}>
+            <ListItemText
+              primary="Participants"
+              secondary={conversationInfo.participants} 
+            />
+        </ListItem>
+        <ListItem sx={{paddingTop: 0,paddingBottom: 0}}>
+            <ListItemText
+              primary="Number of Messages"
+              secondary={conversationInfo.num_messages}
+            />
+        </ListItem>
+        <ListItem sx={{paddingTop: 0,paddingBottom: 0}}>
+            <ListItemText
+              primary="First Message Date"
+              secondary={conversationInfo.first_message_date} 
+            />
+        </ListItem>
+        <ListItem sx={{paddingTop: 0,paddingBottom: 0}}>
+            <ListItemText
+              primary="Last Message Date"
+              secondary={conversationInfo.last_message_date}
+            />
+        </ListItem>
+      </List>
+      
     </React.Fragment>
   );
 }

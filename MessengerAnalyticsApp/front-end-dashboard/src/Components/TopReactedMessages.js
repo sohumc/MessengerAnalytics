@@ -1,13 +1,10 @@
 import * as React from 'react';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
 import Title from '../Title';
-import { useLocation, BrowserRouter, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -15,21 +12,11 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import PropTypes from 'prop-types';
 import Collapse from '@mui/material/Collapse';
 import IconButton from '@mui/material/IconButton';
-import Box from '@mui/material/Box';
-
-import { prettifyNumber } from '../Utils';
-
-function preventDefault(event) {
-  event.preventDefault();
-}
 
 export default function TopReactedMessages() {
 
-    // const { search } = useLocation();
-    // let params = useParams();
     const [topReactedMessages, setTopReactedMessages] = useState({});
     let conversation_id = useLocation()['pathname'].replace("/conversation/","");
-    let table_objects = []
     useEffect(() => {
 
         fetch('/api/reactions/' + conversation_id).then(res => res.json()).then(
@@ -119,14 +106,14 @@ export default function TopReactedMessages() {
           
         Row.propTypes = {
             row: PropTypes.shape({
-            name: PropTypes.string.isRequired,
-            calories: PropTypes.number.isRequired,
-            history: PropTypes.arrayOf(
-                PropTypes.shape({
-                    customerId: PropTypes.string.isRequired,
-                    date: PropTypes.string.isRequired,
-                }),
-            ).isRequired,
+                name: PropTypes.string.isRequired,
+                history: PropTypes.arrayOf(
+                    PropTypes.shape({
+                        message: PropTypes.string,
+                        reaction_count: PropTypes.number,
+                        reactions: PropTypes.string,
+                    }),
+                ),
             }).isRequired,
         };
         var rows = []

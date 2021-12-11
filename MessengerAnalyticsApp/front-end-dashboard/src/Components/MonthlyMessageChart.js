@@ -1,34 +1,10 @@
 import * as React from 'react';
-import { useTheme } from '@mui/material/styles';
-import { LineChart, Line, XAxis, YAxis, Label, ResponsiveContainer } from 'recharts';
 import Title from '../Title';
-import Link from '@mui/material/Link';
-import Typography from '@mui/material/Typography';
-import { useLocation, BrowserRouter, useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import { prettifyNumber } from '../Utils';
 import { ResponsiveLine } from '@nivo/line'
 import { Box } from '@mui/system';
 
-const data = [
-    {
-      "id": "norway",
-      "color": "hsl(243, 70%, 50%)",
-      "data": [
-        {
-          "x": "plane",
-          "y": 25
-        }
-
-      ]
-    }
-  ]
-  
 export default function MonthlyMessageChart() {
     const [monthlyMessageChartData, setMonthlyMessageChartData] = useState([]);
     let conversation_id = useLocation()['pathname'].replace("/conversation/","");
@@ -37,25 +13,24 @@ export default function MonthlyMessageChart() {
         return { x, y};
     }
     useEffect(() => {
-
-        fetch('/api/messagesTimeSeries/' + conversation_id).then(res => res.json()).then(
-        data => {
-            if(data["messages_per_month"]["m"]){
-                for (var i = 0; i < Object.keys(data["messages_per_month"]["m"]).length; i++) {
-                        table_objects.push(createData(data["messages_per_month"]["m"][i], data["messages_per_month"]["COUNT(*)"][i]))
-                    }
-                var chart_data = [{
-                    "id": "messages",
-                    "data": table_objects
-                }]
-                setMonthlyMessageChartData(chart_data)
-            }
-            });
-            
-        }, [conversation_id])
+      fetch('/api/messagesTimeSeries/' + conversation_id).then(res => res.json()).then(
+      data => {
+          if(data["messages_per_month"]["m"]){
+              for (var i = 0; i < Object.keys(data["messages_per_month"]["m"]).length; i++) {
+                table_objects.push(createData(data["messages_per_month"]["m"][i], data["messages_per_month"]["COUNT(*)"][i]))
+              }
+              var chart_data = [{
+                "id": "messages",
+                "data": table_objects
+              }]
+              setMonthlyMessageChartData(chart_data)
+          }
+          });
+          
+      }, [conversation_id])
         
  
-  const MyResponsiveLine = ({ data  }) => (
+  const MyResponsiveLine = (
     <ResponsiveLine
         data={monthlyMessageChartData}
         margin={{ top: 10, right: 10, bottom: 25, left: 60 }}
@@ -102,7 +77,7 @@ export default function MonthlyMessageChart() {
       <Title>Monthly Messages</Title>
 
     <Box sx={{height: '90%' }}>
-    {MyResponsiveLine({ data })}
+    {MyResponsiveLine}
     </Box>
 
 

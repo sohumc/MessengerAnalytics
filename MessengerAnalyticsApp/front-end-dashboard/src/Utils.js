@@ -14,7 +14,7 @@ function processPrettifyNumber(input, decimalPlaces = 0){
     if(!isNaN(parseFloat(input))){
         var temp = parseFloat(input)
         if(temp.countDecimals() > 0){
-            var temp = temp.toFixed(decimalPlaces)
+            temp = temp.toFixed(decimalPlaces)
         }
         //add commas
         temp = temp.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");

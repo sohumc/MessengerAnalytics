@@ -1,4 +1,3 @@
-import sqlite3
 
 import click
 from flask import current_app, g
@@ -10,16 +9,10 @@ import fnmatch
 import json
 import random
 from dataclasses import dataclass, field
-# import MessengerAnalyticsApp.models.conversation as conversation
 from MessengerAnalyticsApp.models.conversation import Conversation
-
 from MessengerAnalyticsApp.models.message import Message
-# import MessengerAnalyticsApp.models.message as message
 from datetime import datetime
-import codecs
-import re
 import json
-import mysql.connector
 from flask import current_app, g
 from MessengerAnalyticsApp.db import get_db
 
@@ -57,17 +50,6 @@ def remove_nonjson_objects(jsonFileList):
             if (combined_path) not in jsonFileList:
                 os.remove(combined_path)
 def parse_reactions(input_reactions):
-    # turn "reactions": [
-    #     {
-    #       "reaction": "\u00e2\u009d\u00a4",
-    #       "actor": "Sohum Chitalia"
-    #     },
-    #     {
-    #       "reaction": "\u00e2\u009d\u00a4",
-    #       "actor": "Sohum Chitalia"
-    #     }
-    #   ]
-    # into -> reactions = {reaction: [actors]}
     parsed_reactions = {}
     for reactionObject in input_reactions:
         if decode_str(reactionObject["reaction"]) in parsed_reactions:
@@ -137,12 +119,10 @@ def load_conversations_to_db(conversationsList):
 @with_appcontext
 def load_db_command():
     jsonFileDict = find_json_messages()
-    # remove_nonjson_objects(jsonFileDict.values())
-    # random_entry = random.choice(list(jsonFileDict.items()))
-    # jsonFileDict = {random_entry[0]: random_entry[1]}
-    # jsonFileDict = {'MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da': jsonFileDict['MessengerAnalyticsApp/data/theforgereturns_7kjmx7d_da']}
     conversations = create_conversations(jsonFileDict)
     load_conversations_to_db(conversations)
+    click.echo('Loaded the database.')
+
 
 def init_app(app):
     app.cli.add_command(load_db_command)

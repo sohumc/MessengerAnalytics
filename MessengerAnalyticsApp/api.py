@@ -1,10 +1,8 @@
-import functools
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
-import langid
 from nltk.tokenize import word_tokenize
 import pandas as pd
 import json
@@ -14,14 +12,41 @@ from dateutil import parser
 from MessengerAnalyticsApp.db import get_db
 import datetime
 import re
-import time
 
 bp = Blueprint('api', __name__, url_prefix='/api')
+
+@bp.route('/messageBasicInfo/<conversation_id>', methods=('GET',))
+def get_message_basic_info(conversation_id):
+    db = get_db()
+    df = pd.read_sql_query("""select  count(messages.id) as num_messages, sender from messages WHERE conversation_id='{}' group by sender""".format(conversation_id), db)
+    sender_obj_list = []
+    for index, row in df.iterrows():
+        conversation_object = {
+            "id" : row["sender"],
+            "label" : row["sender"],
+            "value" : row["num_messages"],
+        }
+        sender_obj_list.append(conversation_object)
+
+    return {"result" : sender_obj_list}
+
+@bp.route('/conversationBasicInfo/<conversation_id>', methods=('GET',))
+def get_conversation_basic_info(conversation_id):
+    db = get_db()
+    df = pd.read_sql_query("""select conversations.participants, count(messages.id) as num_messages, strftime('%m-%d-%Y',min(messages.timestamp)) as first_message_date, strftime('%m-%d-%Y',max(messages.timestamp)) as last_message_date from conversations JOIN messages on messages.conversation_id = conversations.id WHERE conversation_id='{}' group by conversation_id""".format(conversation_id), db)
+    returnObj =  {
+        "participants" : str(df["participants"][0]).replace("[", "").replace("]", "").replace('"', "").replace("'", ""),
+        "num_messages" : int(df["num_messages"][0]),
+        "first_message_date" : df["first_message_date"][0],
+        "last_message_date" : df["last_message_date"][0]
+     }
+
+    return returnObj
 
 @bp.route('/conversationList', methods=('GET',))
 def get_conversation_list():
     db = get_db()
-    df = pd.read_sql_query("""SELECT conversations.id, conversations.title, count(messages.id) as num_messages, max(messages.timestamp) as last_message_date FROM conversations JOIN messages on messages.conversation_id = conversations.id GROUP BY conversation_id""", db)
+    df = pd.read_sql_query("""SELECT conversations.id, conversations.title, count(messages.id) as num_messages, max(messages.timestamp) as last_message_date FROM conversations JOIN messages on messages.conversation_id = conversations.id GROUP BY conversation_id ORDER BY last_message_date DESC""", db)
     conversation_list = []
     for index, row in df.iterrows():
         conversation_object = {
@@ -96,8 +121,12 @@ def get_average_reactions_per_message_per_participant(conversation_id, message_d
             reaction_counts[sender] += reaction_count
         else:
             reaction_counts[sender] = reaction_count
+    
     for participant in message_counts.keys():
-        reactions_per_message[participant] = reaction_counts[participant] / message_counts[participant]
+        if(participant in reaction_counts and participant in message_counts):
+            reactions_per_message[participant] = reaction_counts[participant] / message_counts[participant]
+        else:
+            reactions_per_message[participant] = 0
     
     return reactions_per_message
     

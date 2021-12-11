@@ -1,19 +1,9 @@
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import React, { useState, useEffect } from 'react';
-import List from '@material-ui/core/List';
-import { BrowserRouter, Route, Switch, Link, useLocation } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
+import { useLocation } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
-import Chart from './Chart';
-import Deposits from './Deposits';
-import Orders from './Orders';
-import Sidebar from './Sidebar';
 import ConversationInfo from './Components/ConversationInfo'
 import ContentType from './Components/ContentType'
 import ConversationSentiment from './Components/ConversationSentiment';
@@ -26,15 +16,12 @@ import TopReactedMessages from './Components/TopReactedMessages'
 import AvgReactionsByParticipant from './Components/AvgReactionsByParticipant';
 import MostMentioned from './Components/MostMentioned';
 import ConversationStarters from './Components/ConversationStarters';
-import { mainListItems, secondaryListItems } from './listItems';
-import Title from './Title';
+import TotalMessageChart from './Components/TotalMessageChart';
 
 
 
 
 export default function DashboardContent() {
-  const location = useLocation();
-  const [count, setCount] = useState(0);
   const [conversationInfo, setConversationInfo] = useState([]);
   
 
@@ -70,6 +57,31 @@ export default function DashboardContent() {
                 <Typography component="h2" variant="h4" color="primary" >
                    {titleStr}
                 </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 360,
+                }}
+              >    
+              < ConversationInfo/>                
+              </Paper>
+            </Grid>
+            {/* Total Message Chart */}
+            <Grid item xs={12} md={8} lg={6}>
+              <Paper
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: 360,
+                }}
+              >    
+              < TotalMessageChart/>                
               </Paper>
             </Grid>
             {/* Monthly Message Chart */}
