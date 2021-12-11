@@ -5,8 +5,10 @@ Run analytics on your FB Messenger conversations.
 ## Installation
 
 Export your message data from Facebook, and then place it in the MessengerAnalyticsApp/data folder of the project
-Once inside the MessengerAnalyticsApp folder run the following commands
+
 ```sh
+cd MessengerAnalyticsApp
+
 $env:FLASK_APP = "MessengerAnalyticsApp"
 flask init-db
 flask load-db
