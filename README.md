@@ -5,7 +5,7 @@ Run analytics on your FB Messenger conversations.
 ## Installation
 
 Export your message data from Facebook, and then place it in the MessengerAnalyticsApp/data folder of the project
-![Screenshot](/screenshot.png)
+![Screenshot](MessengerAnalyticsApp/screenshot.png)
 
 
 ```sh
